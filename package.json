@@ -4,12 +4,14 @@
     "@aztec/accounts": "0.76.2",
     "@aztec/aztec.js": "0.76.2",
     "@aztec/noir-contracts.js": "0.76.2",
-    "@types/node": "^22.5.1"
+    "@types/node": "^22.5.1",
+    "ws": "^8.18.0"
   },
   "type": "module",
   "devDependencies": {
     "@types/node": "^22.5.1",
+    "@types/ws": "^8.5.14",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.4"
+    "typescript": "^5.7.3"
   }
 }
