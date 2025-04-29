@@ -8,7 +8,7 @@ use url::Url; // Importing futures utils
 
 #[tokio::main]
 async fn main() {
-    let url = Url::parse("ws://localhost:3001").unwrap();
+    let url = Url::parse("ws://localhost:3002").unwrap();
 
     match connect_async(url).await {
         Ok((mut socket, _)) => {

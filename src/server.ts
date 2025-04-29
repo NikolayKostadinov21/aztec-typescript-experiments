@@ -31,7 +31,7 @@ async function deployContract() {
 let contractInstance: any;
 let walletInstance: any;
 
-function startWebSocketServer(port = 3001) {
+function startWebSocketServer(port = 3002) {
     try {
         const wss = new WebSocketServer({ port });
 
