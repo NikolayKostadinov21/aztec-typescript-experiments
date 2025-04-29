@@ -24,7 +24,7 @@ async function deployContract() {
     let tx = await schnorrAccount.deploy().wait();
     let wallet = await schnorrAccount.getWallet();
     const mainContract = await MainContract.deploy(wallet).send().deployed();
-    console.log(`✅ Main Contract deployed at: ${mainContract.address.toString()}`);
+    console.log(`Main Contract deployed at: ${mainContract.address.toString()}`);
     return { contract: mainContract, wallet };
 }
 
@@ -36,26 +36,26 @@ function startWebSocketServer(port = 3002) {
         const wss = new WebSocketServer({ port });
 
         wss.on('connection', (ws) => {
-            console.log(`✅ Rust sequencer connected to WebSocket on port ${port}`);
+            console.log(`Rust sequencer connected to WebSocket on port ${port}`);
 
             ws.on('message', async (message) => {
-                console.log("📥 Received WebSocket message:", message.toString());
+                console.log("Received WebSocket message:", message.toString());
                 ws.send(JSON.stringify({ success: true, message: "Test response from WebSocket server" }));
             });
 
             ws.on('close', () => {
-                console.log(`❌ Rust sequencer disconnected from port ${port}`);
+                console.log(`Rust sequencer disconnected from port ${port}`);
             });
 
         });
 
-        console.log(`🚀 WebSocket server running on ws://localhost:${port}`);
+        console.log(`WebSocket server running on ws://localhost:${port}`);
     } catch (error: any) {
         if (error.code === 'EADDRINUSE') {
-            console.error(`❌ Port ${port} already in use, retrying with port ${port + 1}...`);
+            console.error(`Port ${port} already in use, retrying with port ${port + 1}...`);
             startWebSocketServer(port + 1); // Try next available port
         } else {
-            console.error("❌ Unexpected error in WebSocket server:", error);
+            console.error("Unexpected error in WebSocket server:", error);
         }
     }
 }
@@ -64,17 +64,17 @@ function startWebSocketServer(port = 3002) {
 // startWebSocketServer();
 
 async function ensurePXEReady() {
-    console.log("⏳ Waiting for PXE to be ready...");
+    console.log("Waiting for PXE to be ready...");
     while (true) {
         try {
             const response = await fetch("http://localhost:8080/status");
             console.log('response.statusText', response.statusText);
             if (response.statusText === "OK") {
-                console.log("✅ PXE is ready!");
+                console.log("PXE is ready!");
                 return;
             }
         } catch (error) {
-            console.log("⏳ PXE not ready yet, retrying...");
+            console.log("PXE not ready yet, retrying...");
         }
         await new Promise(resolve => setTimeout(resolve, 5000));
     }
@@ -83,12 +83,12 @@ async function ensurePXEReady() {
 async function deployContractWithRetry() {
     await ensurePXEReady();
     try {
-        console.log("🚀 Deploying contract...");
+        console.log("Deploying contract...");
         const { contract, wallet } = await deployContract();
-        console.log("✅ Contract deployed at:", contract.address.toString());
+        console.log("Contract deployed at:", contract.address.toString());
         return { contract, wallet };
     } catch (error) {
-        console.error("❌ Contract deployment failed, retrying in 10 seconds...", error);
+        console.error("Contract deployment failed, retrying in 10 seconds...", error);
         await new Promise(resolve => setTimeout(resolve, 10000));
         return deployContractWithRetry();
     }
