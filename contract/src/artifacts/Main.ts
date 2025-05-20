@@ -34,7 +34,7 @@ import {
   type U128Like,
   type WrappedFieldLike,
 } from '@aztec/aztec.js';
-import MainContractArtifactJson from './contract-Main.json' assert { type: 'json' };
+import MainContractArtifactJson from '../../target/contract-Main.json' assert { type: 'json' };
 export const MainContractArtifact = loadContractArtifact(MainContractArtifactJson as NoirCompiledContract);
 
 
@@ -43,16 +43,16 @@ export const MainContractArtifact = loadContractArtifact(MainContractArtifactJso
  * Type-safe interface for contract Main;
  */
 export class MainContract extends ContractBase {
-
+  
   private constructor(
     instance: ContractInstanceWithAddress,
     wallet: Wallet,
   ) {
     super(instance, MainContractArtifact, wallet);
   }
+  
 
-
-
+  
   /**
    * Creates a contract instance.
    * @param address - The deployed contract's address.
@@ -66,18 +66,18 @@ export class MainContract extends ContractBase {
     return Contract.at(address, MainContract.artifact, wallet) as Promise<MainContract>;
   }
 
-
+  
   /**
    * Creates a tx to deploy a new instance of this contract.
    */
-  public static deploy(wallet: Wallet,) {
+  public static deploy(wallet: Wallet, ) {
     return new DeployMethod<MainContract>(PublicKeys.default(), wallet, MainContractArtifact, MainContract.at, Array.from(arguments).slice(1));
   }
 
   /**
    * Creates a tx to deploy a new instance of this contract using the specified public keys hash to derive the address.
    */
-  public static deployWithPublicKeys(publicKeys: PublicKeys, wallet: Wallet,) {
+  public static deployWithPublicKeys(publicKeys: PublicKeys, wallet: Wallet, ) {
     return new DeployMethod<MainContract>(publicKeys, wallet, MainContractArtifact, MainContract.at, Array.from(arguments).slice(2));
   }
 
@@ -97,9 +97,9 @@ export class MainContract extends ContractBase {
       opts.method ?? 'constructor',
     );
   }
+  
 
-
-
+  
   /**
    * Returns this contract's artifact.
    */
@@ -113,25 +113,25 @@ export class MainContract extends ContractBase {
   public static get artifactForPublic(): ContractArtifact {
     return loadContractArtifactForPublic(MainContractArtifactJson as NoirCompiledContract);
   }
-
+  
 
   public static get storage(): ContractStorageLayout<'field_in_map' | 'just_field'> {
-    return {
-      field_in_map: {
-        slot: new Fr(1n),
-      },
-      just_field: {
-        slot: new Fr(2n),
-      }
-    } as ContractStorageLayout<'field_in_map' | 'just_field'>;
-  }
+      return {
+        field_in_map: {
+      slot: new Fr(1n),
+    },
+just_field: {
+      slot: new Fr(2n),
+    }
+      } as ContractStorageLayout<'field_in_map' | 'just_field'>;
+    }
+    
 
-
-
+  
 
   /** Type-safe wrappers for the public methods exposed by the contract. */
   public declare methods: {
-
+    
     /** constructor() */
     constructor: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
@@ -154,5 +154,5 @@ export class MainContract extends ContractBase {
     sync_notes: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
   };
 
-
+  
 }

@@ -1,3 +1,5 @@
 node_modules/
 client/Cargo.lock
 client/target
+contract/target
+sequencer/target
