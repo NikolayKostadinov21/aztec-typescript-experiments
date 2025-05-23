@@ -1,9 +1,9 @@
+use crate::aztec_rpc_client::AztecRpcClient;
 use serde_json::{json, Value};
 use std::error::Error;
-use crate::aztec_rpc_client::AztecRpcClient;
 
-use sha3::{Digest, Keccak256};
 use serde::{Deserialize, Serialize};
+use sha3::{Digest, Keccak256};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TxExecutionRequest {
@@ -34,8 +34,8 @@ impl<'a> ContractFunctionInteraction<'a> {
         &self,
     ) -> Result<TxExecutionRequest, Box<dyn std::error::Error>> {
         println!("goes into create_tx_execution_request");
-        use sha3::{Digest, Keccak256};
         use hex;
+        use sha3::{Digest, Keccak256};
 
         println!("self.function_name: {:#}", self.function_name);
         println!("self.args: {:x?}", self.args);
@@ -45,7 +45,8 @@ impl<'a> ContractFunctionInteraction<'a> {
         hasher.update(function_signature.as_bytes());
         let function_selector = hex::encode(&hasher.finalize()[..4]);
 
-        let dummy_hash = "0x0000000000000000000000000000000000000000000000000000000000000000".to_string();
+        let dummy_hash =
+            "0x0000000000000000000000000000000000000000000000000000000000000000".to_string();
         let tx_context = json!({
             "chainId": "0x1",
             "version": "0x1",
@@ -54,7 +55,7 @@ impl<'a> ContractFunctionInteraction<'a> {
             "gasSettings": {
                 "feePerGas": "0x00",
                 "gasLimit": "0x100000",
-        
+
                 "gasLimits": {
                     "tx": "0x1000",
                     "call": "0x1000",
@@ -62,14 +63,14 @@ impl<'a> ContractFunctionInteraction<'a> {
                     "daGas": "0x1000",
                     "l2Gas": "0x1000"
                 },
-        
+
                 "teardownGasLimits": {
                     "unconstrained": "0x1000",
                     "verification": "0x1000",
                     "daGas": "0x1000",
                     "l2Gas": "0x1000"
                 },
-        
+
                 "maxFeesPerGas": {
                     "tx": "0x00",
                     "call": "0x00",
@@ -77,7 +78,7 @@ impl<'a> ContractFunctionInteraction<'a> {
                     "feePerDaGas": "0x00",
                     "feePerL2Gas": "0x00"
                 },
-        
+
                 "maxPriorityFeesPerGas": {
                     "tx": "0x00",
                     "call": "0x00",
@@ -86,7 +87,7 @@ impl<'a> ContractFunctionInteraction<'a> {
                     "feePerL2Gas": "0x00"
                 }
             }
-        });        
+        });
 
         let tx = TxExecutionRequest {
             origin: self.wallet_address.clone(),
@@ -97,7 +98,7 @@ impl<'a> ContractFunctionInteraction<'a> {
             auth_witnesses: vec![],
             args_of_calls: vec![],
             capsules: vec![],
-        };        
+        };
 
         Ok(tx)
     }
@@ -133,7 +134,7 @@ impl<'a> ContractFunctionInteraction<'a> {
             json!(false),
             Value::Null,
         ];
-        
+
         println!("before simulation_result");
         println!("simulateTx args: {:?}", simulation_args);
         tracing::info!("simulateTx args: {:?}", simulation_args);
@@ -141,7 +142,6 @@ impl<'a> ContractFunctionInteraction<'a> {
         tracing::info!("simulation_result: {:?}", simulation_result);
         println!("simulation_result: {:#}", simulation_result);
         println!("!!!!!");
-        
 
         let private_execution_result = simulation_result["privateExecutionResult"].clone();
         println!("private_execution_result: {:#}", private_execution_result);

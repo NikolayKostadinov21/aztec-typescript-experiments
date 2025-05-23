@@ -29,13 +29,18 @@ describe('Reading from/Writing to storage', () => {
         contract = await MainContract.deploy(wallets[0])
             .send()
             .deployed();
+
+        console.log('new contract: ', contract.address);
     }, 100000);
 
     test('Sets new feeds', async () => {
-        console.log('contract: ', contract.address);
-        let x = getMainByAddress(AztecAddress.fromString("0x04bfd3ad859c1da7e45740d58ef55bd2195c20a63a383b460369f813ecfc1a24"), wallets[0]);
-        let y = (await x).address;
-        console.log("y: ", y);
+        console.log('contract address inside the test: ', contract.address);
+        let x = (await getMainByAddress(contract.address, wallets[0]));
+        console.log("fn selector of set_ju8st_field is ", (await getMainByAddress(contract.address, wallets[0])).methods.set_just_field.selector)
+        let y = (x).address;
+        console.log("inside the test > address of the instance of the contract: ", y);
+
+        await contract.methods.set_just_field(1).send().wait();
 
         // await contract
         //     .withWallet(wallets[0])
