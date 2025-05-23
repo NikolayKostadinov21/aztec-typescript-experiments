@@ -4,7 +4,6 @@ use serde_json::{json, Value};
 use std::env;
 use std::time::Duration;
 use tokio::time::sleep;
-use crate::fields::Fr;
 
 #[derive(Debug, Deserialize)]
 pub struct RpcResponse<T> {
@@ -13,33 +12,6 @@ pub struct RpcResponse<T> {
     pub result: Option<T>,
     pub error: Option<serde_json::Value>,
 }
-
-struct ArgumentEncoder {
-    pub flattened: Vec<Fr>,
-}
-
-struct Argument {
-    _type: String,
-    value: Fr
-}
-
-#[derive(Debug, Clone)]
-pub enum AbiType {
-    Field,
-    Boolean,
-    Array(Box<AbiType>, usize),
-    String(usize),
-    Struct(Vec<StructField>),
-    Integer { signed: bool, width: usize },
-}
-
-#[derive(Debug, Clone)]
-pub struct StructField {
-    pub name: String,
-    pub field_type: AbiType,
-}
-
-const PXE_URL: &str = "http://localhost:8080";
 
 #[derive(Debug)]
 pub struct AztecRpcClient {
@@ -309,20 +281,24 @@ impl AztecRpcClient {
             null
           ]
         });
-        let _payload = json!({
-            "txRequest": tx_execution_request,
-            "simulatePublic": true,
-            "msgSender": "0x154307e2c5e6b146106ad12642a7a1abef01990b0bc68b21c0de67267a705344",
-            "skipTxValidation": false,
-            "skipFeeEnforcement": false,
-            "scopes": [],
-        });
+        // let _payload = json!({
+        //     "txRequest": tx_execution_request,
+        //     "simulatePublic": true,
+        //     "msgSender": "0x154307e2c5e6b146106ad12642a7a1abef01990b0bc68b21c0de67267a705344",
+        //     "skipTxValidation": false,
+        //     "skipFeeEnforcement": false,
+        //     "scopes": [],
+        // });
         println!("goes to here");
 
-        println!(
-            "tx_execution_request: {:?} ",
-            tx_execution_request["params"].as_array().unwrap().to_vec()
-        );
+        // println!(
+        //     "tx_execution_request: {:?} ",
+        //     tx_execution_request["params"].as_array().unwrap().to_vec()
+        // );
+        // encoder.encode_argument(&my_abi_type, &my_arg_json, Some("arg0"))?;
+
+        println!("");
+
         let result: Value = self
             .request(
                 "simulateTx",
@@ -331,77 +307,5 @@ impl AztecRpcClient {
             .await?;
 
         Ok(result)
-    }
-}
-
-impl ArgumentEncoder {
-    pub fn encode_argument(
-        &mut self,
-        abi_type: &AbiType,
-        arg: &Value,
-        name: Option<&str>,
-    ) -> Result<(), String> {
-        match abi_type {
-            AbiType::Field => {
-                if let Some(num) = arg.as_u64() {
-                    self.flattened.push(Fr::from_u8(num as u8));
-                } else if let Some(s) = arg.as_str() {
-                    self.flattened.push(Fr::from_str(s));
-                } else if let Some(b) = arg.as_bool() {
-                    self.flattened.push(Fr::from_u8(if b { 1 } else { 0 }));
-                } else {
-                    return Err(format!("Unsupported Field arg: {:?}", arg));
-                }
-            }
-
-            AbiType::Boolean => {
-                let b = arg.as_bool().ok_or("Expected boolean")?;
-                self.flattened.push(Fr::from_u8(if b { 1 } else { 0 }));
-            }
-
-            AbiType::Array(inner_type, len) => {
-                let arr = arg.as_array().ok_or("Expected array")?;
-                if arr.len() != *len {
-                    return Err(format!(
-                        "Array length mismatch for {}",
-                        name.unwrap_or("unknown")
-                    ));
-                }
-                for (i, elem) in arr.iter().enumerate() {
-                    self.encode_argument(inner_type, elem, Some(&format!("{}[{}]", name.unwrap_or("array"), i)))?;
-                }
-            }
-
-            AbiType::String(len) => {
-                let string = arg.as_str().ok_or("Expected string")?;
-                for i in 0..*len {
-                    let ch = string.chars().nth(i).unwrap_or('\0');
-                    self.flattened.push(Fr::from_u8(ch as u8));
-                }
-            }
-
-            AbiType::Struct(fields) => {
-                let obj = arg.as_object().ok_or("Expected object for struct")?;
-                for field in fields {
-                    let field_val = obj
-                        .get(&field.name)
-                        .ok_or_else(|| format!("Missing field {}", field.name))?;
-                    self.encode_argument(&field.field_type, field_val, Some(&field.name))?;
-                }
-            }
-
-            AbiType::Integer { signed: _, width: _ } => {
-                if let Some(s) = arg.as_str() {
-                    let val = BigUint::parse_bytes(s.as_bytes(), 10)
-                        .ok_or("Invalid string bigint")?;
-                    self.flattened.push(Fr::from_biguint(val));
-                } else if let Some(n) = arg.as_u64() {
-                    self.flattened.push(Fr::from_u8(n as u8));
-                } else {
-                    return Err("Unsupported integer input".into());
-                }
-            }
-        }
-        Ok(())
     }
 }
