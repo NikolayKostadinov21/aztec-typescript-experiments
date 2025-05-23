@@ -3,3 +3,5 @@ client/Cargo.lock
 client/target
 contract/target
 sequencer/target
+.envrc
+default.nix

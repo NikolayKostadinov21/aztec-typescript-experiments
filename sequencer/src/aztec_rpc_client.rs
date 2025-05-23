@@ -4,6 +4,7 @@ use serde_json::{json, Value};
 use std::env;
 use std::time::Duration;
 use tokio::time::sleep;
+use crate::fields::Fr;
 
 #[derive(Debug, Deserialize)]
 pub struct RpcResponse<T> {
@@ -17,14 +18,25 @@ struct ArgumentEncoder {
     pub flattened: Vec<Fr>,
 }
 
+struct Argument {
+    _type: String,
+    value: Fr
+}
+
 #[derive(Debug, Clone)]
 pub enum AbiType {
     Field,
     Boolean,
-    Integer { signed: bool, width: usize },
     Array(Box<AbiType>, usize),
     String(usize),
     Struct(Vec<StructField>),
+    Integer { signed: bool, width: usize },
+}
+
+#[derive(Debug, Clone)]
+pub struct StructField {
+    pub name: String,
+    pub field_type: AbiType,
 }
 
 const PXE_URL: &str = "http://localhost:8080";
@@ -323,47 +335,73 @@ impl AztecRpcClient {
 }
 
 impl ArgumentEncoder {
-    pub fn encode_argument(&self, abi_type: AbiType, arg: String) {
+    pub fn encode_argument(
+        &mut self,
+        abi_type: &AbiType,
+        arg: &Value,
+        name: Option<&str>,
+    ) -> Result<(), String> {
         match abi_type {
             AbiType::Field => {
-                if arg.is_number() {
-                    let num = arg.as_u64().ok_or("Invalid number")?;
+                if let Some(num) = arg.as_u64() {
                     self.flattened.push(Fr::from_u8(num as u8));
-                } else if arg.is_string() {
-                    let s = arg.as_str().unwrap();
+                } else if let Some(s) = arg.as_str() {
                     self.flattened.push(Fr::from_str(s));
-                } else if arg.is_boolean() {
-                    self.flattened
-                        .push(Fr::from_u8(if arg.as_bool().unwrap() { 1 } else { 0 }));
+                } else if let Some(b) = arg.as_bool() {
+                    self.flattened.push(Fr::from_u8(if b { 1 } else { 0 }));
                 } else {
                     return Err(format!("Unsupported Field arg: {:?}", arg));
                 }
             }
+
             AbiType::Boolean => {
-                self.flattened
-                    .push(Fr::from_u8(if arg.as_bool().unwrap() { 1 } else { 0 }));
+                let b = arg.as_bool().ok_or("Expected boolean")?;
+                self.flattened.push(Fr::from_u8(if b { 1 } else { 0 }));
             }
-            AbiType::Array(element_type, length) => {
-                let mut array = Vec::new();
-                for _ in 0..length {
-                    array.push(Value::Null);
+
+            AbiType::Array(inner_type, len) => {
+                let arr = arg.as_array().ok_or("Expected array")?;
+                if arr.len() != *len {
+                    return Err(format!(
+                        "Array length mismatch for {}",
+                        name.unwrap_or("unknown")
+                    ));
                 }
-                self.flattened.push(Value::Array(array));
+                for (i, elem) in arr.iter().enumerate() {
+                    self.encode_argument(inner_type, elem, Some(&format!("{}[{}]", name.unwrap_or("array"), i)))?;
+                }
             }
-            AbiType::String(length) => {
-                self.flattened.push(Value::String(arg));
+
+            AbiType::String(len) => {
+                let string = arg.as_str().ok_or("Expected string")?;
+                for i in 0..*len {
+                    let ch = string.chars().nth(i).unwrap_or('\0');
+                    self.flattened.push(Fr::from_u8(ch as u8));
+                }
             }
+
             AbiType::Struct(fields) => {
-                let mut struct_value = Value::Object(HashMap::new());
+                let obj = arg.as_object().ok_or("Expected object for struct")?;
                 for field in fields {
-                    struct_value
-                        .as_object_mut()
-                        .unwrap()
-                        .insert(field.name.clone(), Value::String(field.value.clone()));
+                    let field_val = obj
+                        .get(&field.name)
+                        .ok_or_else(|| format!("Missing field {}", field.name))?;
+                    self.encode_argument(&field.field_type, field_val, Some(&field.name))?;
                 }
-                self.flattened.push(struct_value);
             }
-            AbiType::Integer { signed, width } => {}
+
+            AbiType::Integer { signed: _, width: _ } => {
+                if let Some(s) = arg.as_str() {
+                    let val = BigUint::parse_bytes(s.as_bytes(), 10)
+                        .ok_or("Invalid string bigint")?;
+                    self.flattened.push(Fr::from_biguint(val));
+                } else if let Some(n) = arg.as_u64() {
+                    self.flattened.push(Fr::from_u8(n as u8));
+                } else {
+                    return Err("Unsupported integer input".into());
+                }
+            }
         }
+        Ok(())
     }
 }

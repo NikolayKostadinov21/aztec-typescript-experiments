@@ -2,11 +2,7 @@ use num_bigint::BigUint;
 use serde_json::Value;
 
 mod aztec_rpc_client;
-mod utils;
-// mod contract_function_interaction;
-// mod update_feeds;
-
-use crate::contract_function_interaction::ContractFunctionInteraction;
+mod fields;
 use aztec_rpc_client::{setup_sandbox, AztecRpcClient};
 
 #[tokio::main]
