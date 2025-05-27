@@ -1,3 +1,4 @@
+use encoder::load_contract_artifact;
 use num_bigint::BigUint;
 use serde_json::Value;
 
@@ -18,6 +19,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("===============================");
     println!("===============================");
     println!("===============================");
+
+    let artifact = load_contract_artifact("contract-Main.json");
+    println!("artifact: {:x?}", artifact);
 
     let just_field = 1u32;
     // let _contract_metadata = pxe
