@@ -1,6 +1,6 @@
 use num_bigint::BigUint;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Fr(pub BigUint);
 
 impl Fr {
@@ -9,10 +9,15 @@ impl Fr {
     }
 
     pub fn from_str(s: &str) -> Self {
-        Fr(BigUint::parse_bytes(s.as_bytes(), 10).expect("Invalid number string"))
+        Fr(BigUint::parse_bytes(s.as_bytes(), 10).unwrap())
     }
 
     pub fn from_biguint(b: BigUint) -> Self {
         Fr(b)
     }
+
+    pub fn from_u64(v: u64) -> Self {
+        Fr(BigUint::from(v))
+    }
 }
+
